@@ -35,7 +35,7 @@ class Hierachy_Data(object):
 
 # save the data to array
 def constructdata(* arg):
-    Data_name = maya.textFieldButtonGrp(textfieldID, q=True, tx=True)
+    Data_name = maya.textField(textfieldID, q=True, tx=True)
     posecontroller = maya.ls(sl=True)
     if not Data_name:
         maya.warning('Please give data a name...')
@@ -77,14 +77,14 @@ def constructdata(* arg):
     maya.rowColumnLayout(
         w=460, h=80, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
     deletebutton = maya.button(
-        l='Add Object', w=125, h=30, al='center', c=partial(Remove_hierachy))
+        l='Add Object', w=125, h=30, al='center')
     importbutton = maya.button(
-        l='Delete Object', w=125, h=30, al='center', c=partial(Import_hierachy, Data_name))
+        l='Delete Object', w=125, h=30, al='center')
 
     deletebutton1 = maya.button(
-        l='Export List', w=125, h=30, al='center', c=partial(Remove_hierachy))
+        l='Export List', w=125, h=30, al='center')
     importbutton1 = maya.button(
-        l='Import List', w=125, h=30, al='center', c=partial(Import_hierachy, Data_name))
+        l='Import List', w=125, h=30, al='center')
 
     maya.setParent('..')
     seprator1 = maya.separator(w=500, h=20)
@@ -96,10 +96,10 @@ def constructdata(* arg):
     maya.rowColumnLayout(
         w=460, h=40, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
     deletebutton = maya.button(
-        l='Add Pose', w=125, h=30, al='center', c=partial(Remove_hierachy))
+        l='Add Pose', w=125, h=30, al='center')
     # exportbutton=maya.button(l='Export',w=100,h=20,al='center',c=partial(export_hierachy))
     importbutton = maya.button(
-        l='Rename Pose', w=125, h=30, al='center', c=partial(Import_hierachy, Data_name))
+        l='Rename Pose', w=125, h=30, al='center')
     maya.setParent('..')
     maya.columnLayout(w=460, h=130, cat=('left', 50),rs=5)
     maya.text(l='Pose List:',al='left',w=400,fn='boldLabelFont')
@@ -380,13 +380,18 @@ def posesaver_pannel():
     form0=maya.formLayout('windowsform',p=windowID)
     layout = maya.columnLayout(layoutID,w=480)
     maya.formLayout(form0,e=True,af=[(layout,'top',10),(layout,'left',10),(layout,'right',10)])
-    #maya.separator(p=layout)
+    #maya.separator(p=form0)
     maya.text(l='Define the object that need to save pose',
               al='center', w=480, h=20, fn='boldLabelFont', p=layout)
-    maya.text(l='please select the base object/hierachy, then press Enter',
-              al='center', w=480, h=20, fn='boldLabelFont', p=layout)
-    maya.textFieldButtonGrp(textfieldID, l='please give Character a name',
-                            bl='Enter', pht='put the name here...', cw=(1, 180), bc=constructdata, p=layout)
+    maya.columnLayout(w=480,h=50,cat=('left',50))
+    maya.text(l='Data Name:',
+              al='left', w=480, h=20, fn='boldLabelFont')
+    maya.textField(textfieldID,pht='put the name here...', w=380,h=20)
+    maya.setParent('..')
+    maya.rowColumnLayout(
+        w=480, h=35, nc=2, cs=[(1, 60), (2, 110), (3, 60)],rs=(1,5))
+    maya.button(l='Add Data', w=125, h=30, al='center',c=constructdata)
+    maya.button(l='Rename Data', w=125, h=30, al='center')
     maya.showWindow(windowID)
 
 

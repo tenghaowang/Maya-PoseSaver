@@ -15,8 +15,7 @@ textfieldID = 'Enterhierachy'
 textfieldID1 = 'posename'
 layoutID = 'coluumnlayout'
 tabID='mytablayout'
-obj_list='objscrolllist'
-# Pose_Button_Manger=[]
+controller_list='objscrolllist'
 formlayout_flag = False
 shelf_dic = dict()
 
@@ -30,29 +29,12 @@ class Hierachy_Data(object):
         self.name = name
     keylist = []
     pose_dict = dict()
-    pose_gui_dict = dict()
+    #pose_gui_dict = dict()
 
 
 # save the data to array
 def constructdata(* arg):
     Data_name = maya.textField(textfieldID, q=True, tx=True)
-    posecontroller = maya.ls(sl=True)
-    if not Data_name:
-        maya.warning('Please give data a name...')
-        return
-    if not posecontroller:
-        maya.warning('Please select at least one object...')
-        return
-    if Data_name in Data_dic:
-        maya.warning('Data name exists!')
-        return
-    temp_data = Hierachy_Data(Data_name)
-    temp_data.keylist = posecontroller
-    #update objscroll
-    #cmds.textScrollList(obj_list,e=True,a=posecontroller)
-    Data_dic[Data_name] = temp_data
-    print Data_dic[Data_name].keylist
-    # print posedata_dic
     global formlayout_flag
     print formlayout_flag
     if(not formlayout_flag):
@@ -64,6 +46,12 @@ def constructdata(* arg):
         mytab = maya.tabLayout(tabID)
         maya.formLayout(myform, e=True, af=[
                         (mytab, 'top', 10), (mytab, 'bottom', 10), (mytab, 'left', 7), (mytab, 'right', 10)])
+    childarray=maya.tabLayout(tabID,q=True,ca=True)
+    if childarray == None:
+        childarray=[]
+    if Data_name in childarray:
+        maya.warning('Data name exists')
+        return
     mytabcolumn = maya.columnLayout(Data_name, w=460, h=550,p=tabID)
     shelf_dic[Data_name] = mytabcolumn
     #form1=maya.formLayout(p=myshelf,w=480,h=500)
@@ -71,19 +59,19 @@ def constructdata(* arg):
     #maya.formLayout(form1,e=True,af=[(mylayout1,'top',10),(mylayout1,'right',10),(mylayout1,'left',10)])
     mytext=maya.text(l='Object List:',al='left',fn='boldLabelFont',w=430,h=20)
    # print mytext
-    maya.textScrollList(obj_list,w=360,h=100)
+    maya.textScrollList(controller_list,ams=True,w=360,h=100)
     maya.setParent('..')
 
     maya.rowColumnLayout(
         w=460, h=80, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
-    deletebutton = maya.button(
-        l='Add Object', w=125, h=30, al='center')
-    importbutton = maya.button(
-        l='Delete Object', w=125, h=30, al='center')
+    AddObject = maya.button(
+        l='Add Object', w=125, h=30, al='center',c=partial(addobject,Data_name))
+    DelObject = maya.button(
+        l='Delete Object', w=125, h=30, al='center',c=delobject)
 
-    deletebutton1 = maya.button(
+    ExportList = maya.button(
         l='Export List', w=125, h=30, al='center')
-    importbutton1 = maya.button(
+    ImportList = maya.button(
         l='Import List', w=125, h=30, al='center')
 
     maya.setParent('..')
@@ -95,15 +83,15 @@ def constructdata(* arg):
     maya.setParent('..')
     maya.rowColumnLayout(
         w=460, h=40, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
-    deletebutton = maya.button(
-        l='Add Pose', w=125, h=30, al='center')
+    addpose = maya.button(
+        l='Add Pose', w=125, h=30, al='center',c=add_pose)
     # exportbutton=maya.button(l='Export',w=100,h=20,al='center',c=partial(export_hierachy))
-    importbutton = maya.button(
+    renamepose = maya.button(
         l='Rename Pose', w=125, h=30, al='center')
     maya.setParent('..')
     maya.columnLayout(w=460, h=130, cat=('left', 50),rs=5)
     maya.text(l='Pose List:',al='left',w=400,fn='boldLabelFont')
-    maya.textScrollList(obj_list,w=360,h=100)
+    maya.textScrollList(Data_name+'_poselist',w=360,h=100)
     maya.setParent('..')
     maya.rowColumnLayout(
         w=460, h=80, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
@@ -113,9 +101,50 @@ def constructdata(* arg):
     maya.button(l='Import Pose', w=125, h=30, al='center')
 
 
+def removedata(*arg):
+    #return current dataname
+    index=maya.tabLayout(tabID,q=True,sti=True)
+    Tablist=maya.tabLayout(tabID,q=True,tli=True)
+    Dataname=Tablist[index-1]
+    maya.deleteUI(shelf_dic[Dataname])
+    del shelf_dic[Dataname]
+    del Data_dic[Dataname]
+    if (len(shelf_dic.keys())==0):
+        maya.deleteUI(tabID)
+        global formlayout_flag
+        formlayout_flag=False
 
-def Remove_hierachy(*arg):
-    print 'delete data'
+def renamedata(*arg):
+    newname= maya.textField(textfieldID, q=True, tx=True)
+    index=maya.tabLayout(tabID,q=True,sti=True)
+    Tablist=maya.tabLayout(tabID,q=True,tli=True)
+    print Tablist
+    Dataname=Tablist[index-1]
+    maya.tabLayout(tabID,e=True,tl=[shelf_dic[Dataname],newname])
+    shelf_dic[newname]=shelf_dic[Dataname]
+    Data_dic[newname]=Data_dic[Dataname]
+    del Data_dic[Dataname]
+    del shelf_dic[Dataname]
+
+def addobject(Dataname, *arg):
+    print Dataname+'_objlist'
+    posecontroller = maya.ls(sl=True)
+    existcontroller=maya.textScrollList(controller_list,q=True,ai=True)
+    if existcontroller == None:
+        existcontroller=[]
+    addobj=[]
+    for controller in posecontroller:
+        if controller in existcontroller:
+            return 
+        else:
+            addobj.append(controller)
+    maya.textScrollList(controller_list,e=True,a=addobj,w=360,h=100)
+
+def delobject(*arg):
+    selobj=maya.textScrollList(controller_list,q=True,si=True)
+    if not selobj==None:
+        maya.textScrollList(controller_list,e=True,ri=selobj)
+    print selobj
 
 
 def Import_hierachy(Data_name, *arg):
@@ -186,7 +215,11 @@ def UIblock_creation(Data_name, Pose_name):
 # save the data
 
 
-def save_pose(Data_name, *arg):
+def add_pose(Data_name, *arg):
+    temp_data = Hierachy_Data(Data_name)
+    temp_data.keylist = maya.textScrollList(controller_list,q=True,ai=True)
+    print temp_data.keylist
+    Data_dic[Data_name] = temp_data
     Pose_name = maya.textFieldButtonGrp(textfieldID1, q=True, tx=True)
     data_class = Data_dic[Data_name]
     # print data_class.name
@@ -383,15 +416,16 @@ def posesaver_pannel():
     #maya.separator(p=form0)
     maya.text(l='Define the object that need to save pose',
               al='center', w=480, h=20, fn='boldLabelFont', p=layout)
-    maya.columnLayout(w=480,h=50,cat=('left',50))
+    maya.columnLayout(w=480,h=50,cat=('left',25))
     maya.text(l='Data Name:',
               al='left', w=480, h=20, fn='boldLabelFont')
-    maya.textField(textfieldID,pht='put the name here...', w=380,h=20)
+    maya.textField(textfieldID,pht='put the name here...', w=430,h=20)
     maya.setParent('..')
     maya.rowColumnLayout(
-        w=480, h=35, nc=2, cs=[(1, 60), (2, 110), (3, 60)],rs=(1,5))
+        w=480, h=35, nc=3, cs=[(1, 25), (2, 27.5),(3,27.5), (4, 25)],rs=(1,5))
     maya.button(l='Add Data', w=125, h=30, al='center',c=constructdata)
-    maya.button(l='Rename Data', w=125, h=30, al='center')
+    maya.button (l='Remove Data',w=125,h=30,al='center',c=removedata)
+    maya.button(l='Rename Data', w=125, h=30, al='center',c=renamedata)
     maya.showWindow(windowID)
 
 

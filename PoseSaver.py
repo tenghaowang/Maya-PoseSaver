@@ -15,7 +15,7 @@ textfieldID = 'Enterhierachy'
 textfieldID1 = 'posename'
 layoutID = 'coluumnlayout'
 tabID='mytablayout'
-controller_list='objscrolllist'
+#controller_list='objscrolllist'
 formlayout_flag = False
 shelf_dic = dict()
 
@@ -34,6 +34,7 @@ class Hierachy_Data(object):
 
 # save the data to array
 def constructdata(* arg):
+    maya.polySphere()
     Data_name = maya.textField(textfieldID, q=True, tx=True)
     global formlayout_flag
     print formlayout_flag
@@ -59,7 +60,7 @@ def constructdata(* arg):
     #maya.formLayout(form1,e=True,af=[(mylayout1,'top',10),(mylayout1,'right',10),(mylayout1,'left',10)])
     mytext=maya.text(l='Object List:',al='left',fn='boldLabelFont',w=430,h=20)
    # print mytext
-    maya.textScrollList(controller_list,ams=True,w=360,h=100)
+    maya.textScrollList(Data_name+'_controller_list',ams=True,w=360,h=100)
     maya.setParent('..')
 
     maya.rowColumnLayout(
@@ -84,10 +85,10 @@ def constructdata(* arg):
     maya.rowColumnLayout(
         w=460, h=40, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
     addpose = maya.button(
-        l='Add Pose', w=125, h=30, al='center',c=add_pose)
+        l='Add Pose', w=125, h=30, al='center',c=partial(add_pose,Data_name))
     # exportbutton=maya.button(l='Export',w=100,h=20,al='center',c=partial(export_hierachy))
     renamepose = maya.button(
-        l='Rename Pose', w=125, h=30, al='center')
+        l='Rename Pose', w=125, h=30, al='center',c=partial(renamepose,Data_name))
     maya.setParent('..')
     maya.columnLayout(w=460, h=130, cat=('left', 50),rs=5)
     maya.text(l='Pose List:',al='left',w=400,fn='boldLabelFont')
@@ -100,11 +101,16 @@ def constructdata(* arg):
     maya.button(l='Export Pose', w=125, h=30, al='center')
     maya.button(l='Import Pose', w=125, h=30, al='center')
 
+    #create Data_Dictionary
+    Data_dic[Data_name]=Hierachy_Data(Data_name)
+
 
 def removedata(*arg):
     #return current dataname
     index=maya.tabLayout(tabID,q=True,sti=True)
+    print index
     Tablist=maya.tabLayout(tabID,q=True,tli=True)
+    print Tablist[index-1]
     Dataname=Tablist[index-1]
     maya.deleteUI(shelf_dic[Dataname])
     del shelf_dic[Dataname]
@@ -129,7 +135,7 @@ def renamedata(*arg):
 def addobject(Dataname, *arg):
     print Dataname+'_objlist'
     posecontroller = maya.ls(sl=True)
-    existcontroller=maya.textScrollList(controller_list,q=True,ai=True)
+    existcontroller=maya.textScrollList(Dataname+'_controller_list',q=True,ai=True)
     if existcontroller == None:
         existcontroller=[]
     addobj=[]
@@ -138,12 +144,12 @@ def addobject(Dataname, *arg):
             return 
         else:
             addobj.append(controller)
-    maya.textScrollList(controller_list,e=True,a=addobj,w=360,h=100)
+    maya.textScrollList(Dataname+'_controller_list',e=True,a=addobj,w=360,h=100)
 
 def delobject(*arg):
-    selobj=maya.textScrollList(controller_list,q=True,si=True)
+    selobj=maya.textScrollList(Dataname+'_controller_list',q=True,si=True)
     if not selobj==None:
-        maya.textScrollList(controller_list,e=True,ri=selobj)
+        maya.textScrollList(Dataname+'_controller_list',e=True,ri=selobj)
     print selobj
 
 
@@ -184,7 +190,7 @@ def validation_detection():
     '''detect current controller objects'''
     # print posedata[0]
 
-
+'''
 def UIblock_creation(Data_name, Pose_name):
     data_class = Data_dic[Data_name]
     maya.setParent(shelf_dic[Data_name])
@@ -211,27 +217,28 @@ def UIblock_creation(Data_name, Pose_name):
         Pose_button, Del_Button, Key_Button, temp_layout1, temp_layout2, sep_block)
     data_class.pose_gui_dict[Pose_name] = Buttongroup
     print data_class.pose_gui_dict
-
+'''
 # save the data
 
 
 def add_pose(Data_name, *arg):
     temp_data = Hierachy_Data(Data_name)
-    temp_data.keylist = maya.textScrollList(controller_list,q=True,ai=True)
+    print Data_name+'controller_list'
+    temp_data.keylist = maya.textScrollList(Data_name+'_controller_list',q=True,ai=True)
     print temp_data.keylist
     Data_dic[Data_name] = temp_data
-    Pose_name = maya.textFieldButtonGrp(textfieldID1, q=True, tx=True)
-    data_class = Data_dic[Data_name]
+    Pose_name =  maya.textField(textfieldID1, q=True, tx=True)
+    #data_class = Data_dic[Data_name]
     # print data_class.name
     # print data_class.pose_dict
     if not Pose_name:
         maya.warning('please give the pose a name')
         return
-    if searchpose(Pose_name, data_class.pose_dict):
+    if searchpose(Pose_name, temp_data.pose_dict):
         maya.warning('please rename the pose!')
         return
     # pose_dic=dict()
-    posecontroller = data_class.keylist
+    posecontroller =temp_data.keylist
     print posecontroller
     controllerdic = dict()
     for controller in posecontroller:
@@ -241,11 +248,11 @@ def add_pose(Data_name, *arg):
         for Attr in controllerAttr:
             AttrList.append(maya.getAttr(controller+'.'+Attr))
         controllerdic[controller] = AttrList
-    data_class.pose_dict[Pose_name] = controllerdic
-    # print data_class.pose_dict
     '''save the controller list and pose name'''
-    UIblock_creation(Data_name, Pose_name)
-    print data_class.pose_dict
+    temp_data.pose_dict[Pose_name] = controllerdic
+    '''save the data to the pose list'''
+    maya.textScrollList(Data_name+'_poselist',e=True,a=Pose_name,w=360,h=100)
+    print temp_data.pose_dict
     # Pose_Button_Manger.append(Buttongroup)
     # print DataDic
     # print objecthierachy

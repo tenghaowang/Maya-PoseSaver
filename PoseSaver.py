@@ -18,7 +18,7 @@ tabID='mytablayout'
 #controller_list='objscrolllist'
 formlayout_flag = False
 shelf_dic = dict()
-
+perspcam=''
 
 class Hierachy_Data(object):
 
@@ -34,7 +34,6 @@ class Hierachy_Data(object):
 
 # save the data to array
 def constructdata(* arg):
-    maya.polySphere()
     Data_name = maya.textField(textfieldID, q=True, tx=True)
     global formlayout_flag
     print formlayout_flag
@@ -88,7 +87,7 @@ def constructdata(* arg):
         l='Add Pose', w=125, h=30, al='center',c=partial(add_pose,Data_name))
     # exportbutton=maya.button(l='Export',w=100,h=20,al='center',c=partial(export_hierachy))
     renamepose = maya.button(
-        l='Rename Pose', w=125, h=30, al='center',c=partial(renamepose,Data_name))
+        l='Rename Pose', w=125, h=30, al='center',c=partial(rename_pose,Data_name))
     maya.setParent('..')
     maya.columnLayout(w=460, h=130, cat=('left', 50),rs=5)
     maya.text(l='Pose List:',al='left',w=400,fn='boldLabelFont')
@@ -264,6 +263,22 @@ def searchpose(posename, pose_dict):
         print 'find the pose'
         return True
     return False
+
+def rename_pose(Data_name,*arg):
+    temp_data=Hierachy_Data(Data_name)
+    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    new_posename= maya.textField(textfieldID1, q=True, tx=True)
+    if new_posename==None:
+        return
+    if searchpose(new_posename, temp_data.pose_dict):
+        maya.warning('new name exist')
+        return
+    temp_data.pose_dict[new_posename[0]]=temp_data.pose_dict[posename[0]]
+    del temp_data.pose_dict[posename[0]]
+    maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,ri=posename)
+    maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,a=new_posename)
+    #temp_data.pose_dict[]
+    print temp_data.pose_dict
 
 # read the data
 def read_data(Data_name, Pose_name, *arg):
@@ -441,4 +456,12 @@ def rigginggui():
         maya.deleteUI(windowID, wnd=True)
     posesaver_pannel()
 
+
+def add_attribute():
+    #find the perspective camera
+    if maya.objExists('persp'):
+        perspcam=maya.ls('persp')[0]
+        print perspcam
+        print maya.getAttr(perspcam+'.translateX')
 rigginggui()
+add_attribute()

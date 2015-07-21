@@ -8,8 +8,6 @@ from functools import partial
 ''' for each pose save all the attribute property'''
 '''for saving all the data'''
 Data_dic = dict()
-'''for saving individule data type'''
-posedata_dic = dict()
 windowID = 'guiwindow'
 textfieldID = 'Enterhierachy'
 textfieldID1 = 'posename'
@@ -91,18 +89,18 @@ def constructdata(* arg):
     maya.setParent('..')
     maya.columnLayout(w=460, h=130, cat=('left', 50),rs=5)
     maya.text(l='Pose List:',al='left',w=400,fn='boldLabelFont')
-    maya.textScrollList(Data_name+'_poselist',w=360,h=100)
+    maya.textScrollList(Data_name+'_poselist',w=360,h=100,sc=partial(read_data,Data_name))
     maya.setParent('..')
     maya.rowColumnLayout(
         w=460, h=80, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
-    maya.button(l='Keyframe Pose', w=125, h=30, al='center')
-    maya.button(l='Remove Pose', w=125, h=30, al='center')
-    maya.button(l='Export Pose', w=125, h=30, al='center')
-    maya.button(l='Import Pose', w=125, h=30, al='center')
+    maya.button(l='Keyframe Pose', w=125, h=30, al='center',c=partial(keyframe_pose,Data_name))
+    maya.button(l='Remove Pose', w=125, h=30, al='center',c=partial(delete_pose,Data_name))
+    maya.button(l='Export Pose', w=125, h=30, al='center',c=partial(export_pose,Data_name))
+    maya.button(l='Import Pose', w=125, h=30, al='center',c=partial(import_pose,Data_name))
 
     #create Data_Dictionary
     Data_dic[Data_name]=Hierachy_Data(Data_name)
-
+    add_attribute()
 
 def removedata(*arg):
     #return current dataname
@@ -131,8 +129,16 @@ def renamedata(*arg):
     del Data_dic[Dataname]
     del shelf_dic[Dataname]
 
+#create customchannel for save the posedata
+def add_attribute():
+    #find the perspective camera
+    if maya.objExists('persp'):
+        perspcam=maya.ls('pCube1')[0]
+        print perspcam
+        print maya.getAttr(perspcam+'.translateX')
+        maya.addAttr(perspcam,ln='test',dt='string')
+
 def addobject(Dataname, *arg):
-    print Dataname+'_objlist'
     posecontroller = maya.ls(sl=True)
     existcontroller=maya.textScrollList(Dataname+'_controller_list',q=True,ai=True)
     if existcontroller == None:
@@ -152,74 +158,12 @@ def delobject(*arg):
     print selobj
 
 
-def Import_hierachy(Data_name, *arg):
-    data_class = Data_dic[Data_name]
-    controller = dict()
-    # pose=dict()
-    print data_class.keylist
-    xml_file_path = maya.fileDialog(dm='*.xml')
-    print xml_file_path
-    dom = parse("/Users/zifeiwang/Desktop/1.xml")
-    for node in dom.getElementsByTagName('Posename'):
-        namekey = node.attributes.keys()
-        print namekey[0]
-        posepair = node.attributes[namekey[0]]
-        print posepair.value
-        for node in dom.getElementsByTagName('Controller'):
-            attrlist = []
-            controllerkey = node.attributes.keys()
-            print controllerkey[0]
-            controllerpair = node.attributes[controllerkey[0]]
-            for nnode in node.getElementsByTagName('Attributes'):
-                attrs = nnode.attributes.keys()
-                # print attrs[0]
-                pair = nnode.attributes[attrs[0]]
-                #print (str(pair.name)+'='+str(pair.value))
-                print pair.value
-                attrlist.append(str(pair.value))
-            print controllerpair.value
-            print attrlist
-            controller[controllerpair.value] = attrlist
-        data_class.pose_dict[posepair.value] = controller
-        UIblock_creation(Data_name, posepair.value)
-    print data_class.pose_dict
-
-
 def validation_detection():
     '''detect current controller objects'''
     # print posedata[0]
 
-'''
-def UIblock_creation(Data_name, Pose_name):
-    data_class = Data_dic[Data_name]
-    maya.setParent(shelf_dic[Data_name])
-    #global Pose_button
-    temp_layout1 = maya.columnLayout(w=400, h=80, cat=('left', 130))
-    Pose_button = maya.button(l=Pose_name, al='center', w=200, h=50, c=partial(
-        read_data, Data_name, Pose_name))
-    print Pose_button
-    maya.setParent('..')
-    temp_layout2 = maya.rowColumnLayout(
-        w=500, h=50, nc=3, cs=[(1, 25), (2, 30), (3, 30), (4, 30)])
-    #global Del_Button
-    #global Key_Button
-    Key_Button = maya.button(
-        l='Set Keyframe', w=120, h=35, c=partial(key_Frame, Data_name, Pose_name))
-    Export_Button = maya.button(
-        l='Export pose', w=120, h=35, c=partial(Export_pose, Data_name, Pose_name))
-    Del_Button = maya.button(
-        l='Delete', w=120, h=35, c=partial(delete_data, Data_name, Pose_name))
-    maya.setParent('..')
-    sep_block = maya.separator(w=500, h=10)
-    # print Pose_button, Del_Button, Key_Button
-    Buttongroup = (
-        Pose_button, Del_Button, Key_Button, temp_layout1, temp_layout2, sep_block)
-    data_class.pose_gui_dict[Pose_name] = Buttongroup
-    print data_class.pose_gui_dict
-'''
+
 # save the data
-
-
 def add_pose(Data_name, *arg):
     temp_data = Hierachy_Data(Data_name)
     print Data_name+'controller_list'
@@ -265,7 +209,7 @@ def searchpose(posename, pose_dict):
     return False
 
 def rename_pose(Data_name,*arg):
-    temp_data=Hierachy_Data(Data_name)
+    temp_data=Data_dic[Data_name]
     posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
     new_posename= maya.textField(textfieldID1, q=True, tx=True)
     if new_posename==None:
@@ -278,57 +222,40 @@ def rename_pose(Data_name,*arg):
     maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,ri=posename)
     maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,a=new_posename)
     #temp_data.pose_dict[]
+    #Data_dic[Data_name]=temp_data
     print temp_data.pose_dict
+    #print Data_dic[Data_name].pose_dict
 
 # read the data
-def read_data(Data_name, Pose_name, *arg):
-    data_class = Data_dic[Data_name]
-    print data_class.name
-    print data_class.pose_dict[Pose_name]
-    pose = searchpose(Pose_name, data_class.pose_dict)
+def read_data(Data_name,*arg):
+    temp_data = Data_dic[Data_name]
+    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    print temp_data.name
+    print temp_data.pose_dict[posename[0]]
+    pose = searchpose(posename[0], temp_data.pose_dict)
     if(pose):
-        print data_class.keylist
-        for controller in data_class.keylist:
+        print temp_data.keylist
+        for controller in temp_data.keylist:
             controllerAttr = maya.listAttr(
                 controller, r=True, v=True, k=True, c=True)
             print controllerAttr
             # print controllerAttr
             i = 0
             for Attr in controllerAttr:
-                # print data_class.pose_dict[Pose_name][controller]
+                #print data_class.pose_dict[Pose_name][controller]
                 #print (controller+'.'+Attr+'='+unicode(data_class.pose_dict[Pose_name][controller][i]))
                 #print (type(unicode(data_class.pose_dict[Pose_name][controller][i])))
                 # test input is str ot not
                 # determine the data type is string or unicode
-                if type(data_class.pose_dict[Pose_name][controller][i]) == type(str()):
-                    s = data_class.pose_dict[Pose_name][controller][i]
-                    data_class.pose_dict[Pose_name][controller][i]=data_process(s)
+                if type(temp_data.pose_dict[posename[0]][controller][i]) == type(str()):
+                    s = temp_data.pose_dict[posename[0]][controller][i]
+                    temp_data.pose_dict[posename[0]][controller][i]=data_process(s)
                     print type(s)
-                    print type(data_class.pose_dict[Pose_name][controller][i])
+                    print type(temp_data.pose_dict[posename[0]][controller][i])
                     #data_class.pose_dict[Pose_name][controller][i]=s
                     #print type(data_class.pose_dict[Pose_name][controller][i])
-
-                    '''
-                    print 'finish'
-                    s_new=''
-                    print s
-                    if '.' in s:
-                        s_new=s.replace('.', '')
-                        print s_new
-                    if s.startswith('-'):
-                    	s_new=s_new.replace('-','')
-                    	print s_new
-                    if s_new.isdigit():
-                         data_class.pose_dict[Pose_name][controller][i] = float(
-                         data_class.pose_dict[Pose_name][controller][i])
-                         print 'it is number'
-                    if s.isalpha():
-                         print 'it is bool'
-                         data_class.pose_dict[Pose_name][controller][i] = bool(
-                         data_class.pose_dict[Pose_name][controller][i])
-					'''
                 maya.setAttr(
-                    controller+'.'+Attr, data_class.pose_dict[Pose_name][controller][i])
+                    controller+'.'+Attr, temp_data.pose_dict[posename[0]][controller][i])
                 i = i+1
     else:
         print 'cannot find the pose'
@@ -351,29 +278,13 @@ def data_process(str):
 		return str
 
 
-
-
-
-
-def delete_data(Data_name, Pose_name, *arg):
-    data_class = Data_dic[Data_name]
-    print data_class.pose_dict[Pose_name]
-    pose = searchpose(Pose_name, data_class.pose_dict)
-    if(pose):
-        del data_class.pose_dict[Pose_name]
-        for obj in data_class.pose_gui_dict[Pose_name]:
-            cmds.deleteUI(obj)
-        del data_class.pose_gui_dict[Pose_name]
-    # print data_class.pose_dict
-    # print data_class.pose_gui_dict
-
-
-def key_Frame(Data_name, Pose_name, *arg):
-    data_class = Data_dic[Data_name]
-    pose = searchpose(Pose_name, data_class.pose_dict)
+def keyframe_pose(Data_name,*arg):
+    temp_data = Data_dic[Data_name]
+    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    pose = searchpose(posename[0], temp_data.pose_dict)
     if(pose):
         # i=1
-        for controller in data_class.keylist:
+        for controller in temp_data.keylist:
             controllerAttr = maya.listAttr(
                 controller, r=True, v=True, k=True, c=True)
             i = 0
@@ -381,19 +292,31 @@ def key_Frame(Data_name, Pose_name, *arg):
                 # print controller
                 # print Attr
                 maya.setAttr(
-                    controller+'.'+Attr, data_class.pose_dict[Pose_name][controller][i])
+                    controller+'.'+Attr, temp_data.pose_dict[posename[0]][controller][i])
                 maya.setKeyframe(controller, at=Attr)
                 i = i+1
 
 
-def Export_pose(Data_name, Pose_name, *arg):
-    data_class = Data_dic[Data_name]
-    posedic = data_class.pose_dict[Pose_name]
+def delete_pose(Data_name,*arg):
+    temp_data = Data_dic[Data_name]
+    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    print temp_data.pose_dict[posename[0]]
+    pose = searchpose(posename[0], temp_data.pose_dict)
+    if(pose):
+        print '123'
+        del temp_data.pose_dict[posename[0]]
+        maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,ri=posename)
+
+
+def export_pose(Data_name,*arg):
+    temp_data = Data_dic[Data_name]
+    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    posedic = temp_data.pose_dict[posename[0]]
     scenename = maya.file(sn=True, q=True)
     doc = Document()
     print scenename
     print posedic
-    print Pose_name
+    print posename[0]
     #root_node=doc.createElement('Posename: '+Pose_name+ '(filename: {0})'.format(scenename))
     root_node = doc.createElement('PoseData')
     doc.appendChild(root_node)
@@ -402,9 +325,9 @@ def Export_pose(Data_name, Pose_name, *arg):
     file_node.setAttribute('FilePath', str(scenename))
     pose_node = doc.createElement('Posename')
     file_node.appendChild(pose_node)
-    pose_node.setAttribute('PoseName', str(Pose_name))
+    pose_node.setAttribute('PoseName', str(posename[0]))
     # print pose_controller
-    for controller in data_class.keylist:
+    for controller in temp_data.keylist:
         controller_node = doc.createElement('Controller')
         pose_node.appendChild(controller_node)
         controller_node.setAttribute('Controller', str(controller))
@@ -428,6 +351,38 @@ def Export_pose(Data_name, Pose_name, *arg):
         print doc.toprettyxml()
     # print posedata
 
+def import_pose(Data_name, *arg):
+    temp_data = Data_dic[Data_name]
+    # pose=dict()
+    print temp_data.keylist
+    xml_file_path = maya.fileDialog(dm='*.xml')
+    print xml_file_path
+    dom = parse(xml_file_path)
+    for node in dom.getElementsByTagName('Posename'):
+        controller = dict()
+        namekey = node.attributes.keys()
+        print namekey[0]
+        posepair = node.attributes[namekey[0]]
+        print posepair.value
+        for node in dom.getElementsByTagName('Controller'):
+            attrlist = []
+            controllerkey = node.attributes.keys()
+            print controllerkey[0]
+            controllerpair = node.attributes[controllerkey[0]]
+            for nnode in node.getElementsByTagName('Attributes'):
+                attrs = nnode.attributes.keys()
+                # print attrs[0]
+                pair = nnode.attributes[attrs[0]]
+                #print (str(pair.name)+'='+str(pair.value))
+                print pair.value
+                attrlist.append(str(pair.value))
+            print controllerpair.value
+            print attrlist
+            controller[controllerpair.value] = attrlist
+        temp_data.pose_dict[posepair.value] = controller
+        maya.textScrollList(Data_name+'_poselist',e=True,a=posepair.value,w=360,h=100)
+    print temp_data.pose_dict
+
 
 def posesaver_pannel():
     maya.window(windowID, widthHeight=(
@@ -450,6 +405,8 @@ def posesaver_pannel():
     maya.button(l='Rename Data', w=125, h=30, al='center',c=renamedata)
     maya.showWindow(windowID)
 
+def updateXML_data():
+    print "123"
 
 def rigginggui():
     if (maya.window(windowID, ex=True)):
@@ -457,11 +414,4 @@ def rigginggui():
     posesaver_pannel()
 
 
-def add_attribute():
-    #find the perspective camera
-    if maya.objExists('persp'):
-        perspcam=maya.ls('persp')[0]
-        print perspcam
-        print maya.getAttr(perspcam+'.translateX')
 rigginggui()
-add_attribute()

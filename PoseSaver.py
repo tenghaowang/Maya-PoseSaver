@@ -51,53 +51,50 @@ def ui_block(Data_name):
     if Data_name in childarray:
         maya.warning('Data name exists')
         return
-    mytabcolumn = maya.columnLayout(Data_name, w=460, h=550,p=tabID)
+    mytabcolumn = maya.columnLayout(Data_name, w=360, h=500,p=tabID)
     shelf_dic[Data_name] = mytabcolumn
-    #form1=maya.formLayout(p=myshelf,w=480,h=500)
-    maya.columnLayout(w=460,h=130,p=mytabcolumn,cat=['both',50],rs=5)
-    #maya.formLayout(form1,e=True,af=[(mylayout1,'top',10),(mylayout1,'right',10),(mylayout1,'left',10)])
-    mytext=maya.text(l='Object List:',al='left',fn='boldLabelFont',w=430,h=20)
-   # print mytext
-    maya.textScrollList(Data_name+'_controller_list',ams=True,w=360,h=100,sc=select_obj)
+    maya.columnLayout(w=360,h=130,cat=('both',30),rs=5)
+    maya.text(l='Object List:',al='left',fn='boldLabelFont',w=360,h=20)
+    maya.textScrollList(Data_name+'_controller_list',w=300,h=100,ams=True,sc=select_obj)
     maya.setParent('..')
 
     maya.rowColumnLayout(
-        w=460, h=80, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
+        w=360, h=70, nc=2, cs=[(1, 30), (2, 100), (3, 30)],rs=(1,5))
     AddObject = maya.button(
-        l='Add Object', w=125, h=30, al='center',c=addobject)
+        l='Add Object', w=100, h=25, al='center',c=addobject)
     DelObject = maya.button(
-        l='Delete Object', w=125, h=30, al='center',c=delobject)
+        l='Delete Object', w=100, h=25, al='center',c=delobject)
 
     ExportList = maya.button(
-        l='Export List', w=125, h=30, al='center')
+        l='Export List', w=100, h=25, al='center')
     ImportList = maya.button(
-        l='Import List', w=125, h=30, al='center')
+        l='Import List', w=100, h=25, al='center')
 
     maya.setParent('..')
-    seprator1 = maya.separator(w=500, h=20)
-    maya.columnLayout(w=460,h=50,cat=('both',50),rs=5)
+    seprator1 = maya.separator(w=400, h=10)
+    maya.columnLayout(w=360,h=50,cat=('both',30),rs=5)
     maya.text(l='Pose Name:',al='left',w=400,fn='boldLabelFont')
     textfield1 = maya.textField(
-        Data_name+'posename',  pht='put the pose name here...', w=360, h=20)#, bc=partial(save_pose, Data_name)
+        Data_name+'posename',  pht='put the pose name here...', w=300, h=20)#, bc=partial(save_pose, Data_name)
     maya.setParent('..')
     maya.rowColumnLayout(
-        w=460, h=40, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
+        w=360, h=40, nc=2, cs=[(1, 30), (2, 100), (3, 30)],rs=(1,5))
     addpose = maya.button(
-        l='Add Pose', w=125, h=30, al='center',c=add_pose)
+        l='Add Pose', w=100, h=25, al='center',c=add_pose)
     # exportbutton=maya.button(l='Export',w=100,h=20,al='center',c=partial(export_hierachy))
     renamepose = maya.button(
-        l='Rename Pose', w=125, h=30, al='center',c=rename_pose)
+        l='Rename Pose', w=100, h=25, al='center',c=rename_pose)
     maya.setParent('..')
-    maya.columnLayout(w=460, h=130, cat=('left', 50),rs=5)
+    maya.columnLayout(w=360, h=130, cat=('left', 30),rs=5)
     maya.text(l='Pose List:',al='left',w=400,fn='boldLabelFont')
-    maya.textScrollList(Data_name+'_poselist',w=360,h=100,sc=read_data)
+    maya.textScrollList(Data_name+'_poselist',w=300,h=100,sc=read_data)
     maya.setParent('..')
     maya.rowColumnLayout(
-        w=460, h=80, nc=2, cs=[(1, 50), (2, 110), (3, 50)],rs=(1,5))
-    maya.button(l='Keyframe Pose', w=125, h=30, al='center',c=keyframe_pose)
-    maya.button(l='Remove Pose', w=125, h=30, al='center',c=delete_pose)
-    maya.button(l='Export Pose', w=125, h=30, al='center',c=export_pose)
-    maya.button(l='Import Pose', w=125, h=30, al='center',c=import_pose)
+        w=360, h=80, nc=2, cs=[(1, 30), (2, 100), (3, 30)],rs=(1,5))
+    maya.button(l='Keyframe Pose', w=100, h=25, al='center',c=keyframe_pose)
+    maya.button(l='Remove Pose', w=100, h=25, al='center',c=delete_pose)
+    maya.button(l='Export Pose', w=100, h=25, al='center',c=export_pose)
+    maya.button(l='Import Pose', w=100, h=25, al='center',c=import_pose)
 #
 
 def ui_initializer():
@@ -108,14 +105,14 @@ def ui_initializer():
         temp_data=Data_dic[Dataname]
         keylist=temp_data.keylist
         print temp_data.pose_dict.keys()
-        maya.textScrollList(Dataname+'_controller_list',e=True,a=keylist,w=360,h=100)
+        maya.textScrollList(Dataname+'_controller_list',e=True,a=keylist)
         for posename in temp_data.pose_dict.keys():
             #print '123'
-            maya.textScrollList(Dataname+'_poselist',e=True,a=posename,w=360,h=100)
+            maya.textScrollList(Dataname+'_poselist',e=True,a=posename)
 
 def select_obj(*arg):
     Data_name=maya.tabLayout(tabID,q=True,st=True)
-    controller=maya.textScrollList(Data_name+'_controller_list',w=360,h=100,q=True,si=True)
+    controller=maya.textScrollList(Data_name+'_controller_list',q=True,si=True)
     maya.select(controller)
 
 # save the data to array
@@ -237,7 +234,7 @@ def add_pose(*arg):
     '''save the controller list and pose name'''
     temp_data.pose_dict[Pose_name] = controllerdic
     '''save the data to the pose list'''
-    maya.textScrollList(Data_name+'_poselist',e=True,a=Pose_name,w=360,h=100)
+    maya.textScrollList(Data_name+'_poselist',e=True,a=Pose_name)
     #Data_dic[Data_name]=temp_data
     #save xml when add new pose
     updateXML_data()
@@ -254,7 +251,7 @@ def searchpose(posename, pose_dict):
 def rename_pose(*arg):
     Data_name=maya.tabLayout(tabID,q=True,st=True)
     temp_data=Data_dic[Data_name]
-    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    posename=maya.textScrollList(Data_name+'_poselist',q=True,si=True)
     if posename==None:
         return
     new_posename= maya.textField(Data_name+'posename', q=True, tx=True)
@@ -265,8 +262,8 @@ def rename_pose(*arg):
         return
     temp_data.pose_dict[new_posename[0]]=temp_data.pose_dict[posename[0]]
     del temp_data.pose_dict[posename[0]]
-    maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,ri=posename)
-    maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,a=new_posename)
+    maya.textScrollList(Data_name+'_poselist',e=True,ri=posename)
+    maya.textScrollList(Data_name+'_poselist',e=True,a=new_posename)
     #temp_data.pose_dict[]
     #Data_dic[Data_name]=temp_data
     print temp_data.pose_dict
@@ -277,7 +274,7 @@ def rename_pose(*arg):
 def read_data(*arg):
     Data_name=maya.tabLayout(tabID,q=True,st=True)
     temp_data = Data_dic[Data_name]
-    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    posename=maya.textScrollList(Data_name+'_poselist',q=True,si=True)
     #print temp_data.name
     #print temp_data.pose_dict[posename[0]]
     pose = searchpose(posename[0], temp_data.pose_dict)
@@ -323,7 +320,7 @@ def data_process(str):
 def keyframe_pose(*arg):
     Data_name=maya.tabLayout(tabID,q=True,st=True)
     temp_data = Data_dic[Data_name]
-    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    posename=maya.textScrollList(Data_name+'_poselist',q=True,si=True)
     if posename==None:
         return
     pose = searchpose(posename[0], temp_data.pose_dict)
@@ -345,20 +342,20 @@ def keyframe_pose(*arg):
 def delete_pose(*arg):
     Data_name=maya.tabLayout(tabID,q=True,st=True)
     temp_data = Data_dic[Data_name]
-    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    posename=maya.textScrollList(Data_name+'_poselist',q=True,si=True)
     if posename==None:
         return
     print temp_data.pose_dict[posename[0]]
     pose = searchpose(posename[0], temp_data.pose_dict)
     if(pose):
         del temp_data.pose_dict[posename[0]]
-        maya.textScrollList(Data_name+'_poselist',w=360,h=100,e=True,ri=posename)
+        maya.textScrollList(Data_name+'_poselist',e=True,ri=posename)
     updateXML_data()
 
 def export_pose(*arg):
     Data_name=maya.tabLayout(tabID,q=True,st=True)
     temp_data = Data_dic[Data_name]
-    posename=maya.textScrollList(Data_name+'_poselist',w=360,h=100,q=True,si=True)
+    posename=maya.textScrollList(Data_name+'_poselist',q=True,si=True)
     if posename==None:
         return
     posedic = temp_data.pose_dict[posename[0]]
@@ -431,7 +428,7 @@ def import_pose(*arg):
             print attrlist
             controller[controllerpair.value] = attrlist
         temp_data.pose_dict[posepair.value] = controller
-        maya.textScrollList(Data_name+'_poselist',e=True,a=posepair.value,w=360,h=100)
+        maya.textScrollList(Data_name+'_poselist',e=True,a=posepair.value,w=260,h=100)
     print temp_data.pose_dict
 
 
@@ -516,23 +513,23 @@ def LoadData_FromXML():
 
 def posesaver_pannel():
     maya.window(windowID, widthHeight=(
-        500, 500), title='Pose Saver',s=False)
+        400, 400), title='Pose Saver',s=False)
     form0=maya.formLayout('windowsform',p=windowID)
-    layout = maya.columnLayout(layoutID,w=480)
+    layout = maya.columnLayout(layoutID,w=380)
     maya.formLayout(form0,e=True,af=[(layout,'top',10),(layout,'left',10),(layout,'right',10)])
-    #maya.separator(p=form0)
-    maya.text(l='Define the object that need to save pose',
-              al='center', w=480, h=20, fn='boldLabelFont', p=layout)
-    maya.columnLayout(w=480,h=50,cat=('left',25))
+    maya.text(l='Pose Saver Tool',
+              al='center', w=380, h=20, fn='boldLabelFont', p=layout)
+    maya.separator(p=layout,w=400,h=10)
+    maya.columnLayout(w=380,h=50,cat=('both',20))
     maya.text(l='Data Name:',
-              al='left', w=480, h=20, fn='boldLabelFont')
-    maya.textField(textfieldID,pht='put the name here...', w=430,h=20)
+              al='left', w=380, h=20, fn='boldLabelFont')
+    maya.textField(textfieldID,pht='put the name here...', w=340,h=20)
     maya.setParent('..')
     maya.rowColumnLayout(
-        w=480, h=35, nc=3, cs=[(1, 25), (2, 27.5),(3,27.5), (4, 25)],rs=(1,5))
-    maya.button(l='Add Data', w=125, h=30, al='center',c=constructdata)
-    maya.button (l='Remove Data',w=125,h=30,al='center',c=removedata)
-    maya.button(l='Rename Data', w=125, h=30, al='center',c=renamedata)
+        w=380, h=35, nc=3, cs=[(1, 20), (2, 20),(3,20), (4, 20)],rs=(1,5))
+    maya.button(l='Add Data', w=100, h=30, al='center',c=constructdata)
+    maya.button (l='Remove Data',w=100,h=30,al='center',c=removedata)
+    maya.button(l='Rename Data', w=100, h=30, al='center',c=renamedata)
     add_attribute()
     LoadData_FromXML()
     ui_initializer()

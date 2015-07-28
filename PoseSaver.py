@@ -120,6 +120,7 @@ def constructdata(* arg):
     Data_name = maya.textField(textfieldID, q=True, tx=True)
     ui_block(Data_name)
     Data_dic[Data_name]=Hierachy_Data(Data_name)
+    updateXML_data()
 
 def removedata(*arg):
     #return current dataname
@@ -135,6 +136,7 @@ def removedata(*arg):
         maya.deleteUI(tabID)
         global formlayout_flag
         formlayout_flag=False
+    updateXML_data()
 
 def renamedata(*arg):
     newname= maya.textField(textfieldID, q=True, tx=True)
@@ -147,6 +149,7 @@ def renamedata(*arg):
     Data_dic[newname]=Data_dic[Dataname]
     del Data_dic[Dataname]
     del shelf_dic[Dataname]
+    updateXML_data()
 
 #create customchannel for save the posedata
 def add_attribute():
@@ -171,8 +174,9 @@ def addobject(*arg):
     for controller in posecontroller:
         if controller not in existcontroller:
             addobj.append(controller)
-    maya.textScrollList(Dataname+'_controller_list',e=True,a=addobj,w=360,h=100)
+    maya.textScrollList(Dataname+'_controller_list',e=True,a=addobj)
     temp_data.keylist=maya.textScrollList(Dataname+'_controller_list',q=True,ai=True)
+    updateXML_data()
 
 def delobject(*arg):
     Dataname=maya.tabLayout(tabID,q=True,st=True)
@@ -181,14 +185,14 @@ def delobject(*arg):
     if not selobj==None:
         maya.textScrollList(Dataname+'_controller_list',e=True,ri=selobj)
         temp_data.keylist=maya.textScrollList(Dataname+'_controller_list',q=True,ai=True)
+    updateXML_data()
 
 #getsettableChannls
-
-def getChannelBoxAttrs(controller):
     #  BUG some Compound attrs such as constraints return invalid data for some of the
     #  base functions using this as they can't be simply set. HardCode here to strip them out
     #  ie: pointConstraint.target.targetWeight
     #  ie: pointConstraint.vector returns compound attrs
+def getChannelBoxAttrs(controller):
     filtred_controllerAttr=[]
     controllerAttr = maya.listAttr(
             controller, r=True, v=True, k=True, u=True)
@@ -283,7 +287,7 @@ def read_data(*arg):
         for controller in temp_data.keylist:
             controllerAttr = getChannelBoxAttrs(controller)#maya.listAttr(
                 #controller, r=True, v=True, k=True, c=True)
-            print controllerAttr
+            #print controllerAttr
             i = 0
             for Attr in controllerAttr:
                 if type(temp_data.pose_dict[posename[0]][controller][i]) == type(str()):
@@ -299,8 +303,9 @@ def read_data(*arg):
     else:
         print 'cannot find the pose'
 
+#process data 
 def data_process(str):
-	str_temp=''
+	str_temp=str
 	#test the data is float or not, remove the '.' inside the number
 	if '.' in str:
 		str_temp=str.replace('.','')
@@ -315,6 +320,7 @@ def data_process(str):
 	if str.isalpha():
 		str=bool(str)
 		return str
+
 
 
 def keyframe_pose(*arg):
@@ -428,9 +434,9 @@ def import_pose(*arg):
             print attrlist
             controller[controllerpair.value] = attrlist
         temp_data.pose_dict[posepair.value] = controller
-        maya.textScrollList(Data_name+'_poselist',e=True,a=posepair.value,w=260,h=100)
+        maya.textScrollList(Data_name+'_poselist',e=True,a=posepair.value)
     print temp_data.pose_dict
-
+    updateXML_data()
 
 def updateXML_data():
     doc = Document()
@@ -513,13 +519,13 @@ def LoadData_FromXML():
 
 def posesaver_pannel():
     maya.window(windowID, widthHeight=(
-        400, 400), title='Pose Saver',s=False)
+        400, 500), title='Pose Saver',s=True)
     form0=maya.formLayout('windowsform',p=windowID)
     layout = maya.columnLayout(layoutID,w=380)
     maya.formLayout(form0,e=True,af=[(layout,'top',10),(layout,'left',10),(layout,'right',10)])
     maya.text(l='Pose Saver Tool',
               al='center', w=380, h=20, fn='boldLabelFont', p=layout)
-    maya.separator(p=layout,w=400,h=10)
+    maya.separator(p=layout,w=380,h=10)
     maya.columnLayout(w=380,h=50,cat=('both',20))
     maya.text(l='Data Name:',
               al='left', w=380, h=20, fn='boldLabelFont')

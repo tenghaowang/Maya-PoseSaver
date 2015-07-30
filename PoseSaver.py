@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import maya.cmds as maya
 from functools import partial
 
+
 ''' for each pose save all the attribute property'''
 '''for saving all the data'''
 Data_dic = dict()
@@ -66,7 +67,7 @@ def ui_block(Data_name):
         l='Delete Object', w=100, h=25, al='center',c=delobject)
 
     ExportList = maya.button(
-        l='Export List', w=100, h=25, al='center')
+        l='Export List', w=100, h=25, al='center',c=exportpbject)
     ImportList = maya.button(
         l='Import List', w=100, h=25, al='center')
 
@@ -187,6 +188,31 @@ def delobject(*arg):
         temp_data.keylist=maya.textScrollList(Dataname+'_controller_list',q=True,ai=True)
     updateXML_data()
 
+def exportpbject(*arg):
+    Dataname=maya.tabLayout(tabID,q=True,st=True)
+    temp_data=Data_dic[Dataname]
+    exportList=maya.textScrollList(Dataname+'_controller_list',q=True,ai=True)
+    print exportList
+    doc=Document()
+    root_node = doc.createElement('controllerList')
+    doc.appendChild(root_node)
+    for obj in exportList:
+        obj_node = doc.createElement('Name')
+        value_node = doc.createTextNode(obj)  
+        obj_node.appendChild(value_node)
+        root_node.appendChild(obj_node)
+    xml_file_path = maya.fileDialog2(ff='*.xml')
+    print xml_file_path
+    if not xml_file_path == None:
+        print xml_file_path
+        xml_file = open(xml_file_path[0], 'w')
+        xml_file.write(doc.toprettyxml())
+        xml_file.close()
+        print doc.toprettyxml()
+    # print posedata
+
+
+
 #getsettableChannls
     #  BUG some Compound attrs such as constraints return invalid data for some of the
     #  base functions using this as they can't be simply set. HardCode here to strip them out
@@ -248,7 +274,7 @@ def add_pose(*arg):
 def searchpose(posename, pose_dict):
     pose_exsit = False
     if posename in pose_dict:
-        print 'find the pose'
+        #print 'find the pose'
         return True
     return False
 
@@ -270,7 +296,7 @@ def rename_pose(*arg):
     maya.textScrollList(Data_name+'_poselist',e=True,a=new_posename)
     #temp_data.pose_dict[]
     #Data_dic[Data_name]=temp_data
-    print temp_data.pose_dict
+    #print temp_data.pose_dict
     #print Data_dic[Data_name].pose_dict
     updateXML_data()
 
@@ -295,32 +321,26 @@ def read_data(*arg):
                     temp_data.pose_dict[posename[0]][controller][i]=data_process(s)
                     #print type(s)
                     #print type(temp_data.pose_dict[posename[0]][controller][i])
-                print controller+'.'+Attr
-                print temp_data.pose_dict[posename[0]][controller][i]
+                #print controller+'.'+Attr
+                #print temp_data.pose_dict[posename[0]][controller][i]
                 maya.setAttr(
                     controller+'.'+Attr, temp_data.pose_dict[posename[0]][controller][i])
                 i = i+1
-    else:
-        print 'cannot find the pose'
+    #else:
+        #print 'cannot find the pose'
 
 #process data 
 def data_process(str):
-	str_temp=str
-	#test the data is float or not, remove the '.' inside the number
-	if '.' in str:
-		str_temp=str.replace('.','')
-	#if data is less than zero, remove the '-' at the start of the number
-	if str.startswith('-'):
-		str_temp=str_temp.replace('-','')
-	#if the processed data is all digit convert the string to float
-	if str_temp.isdigit():
-		str=float(str)
-		return str
-	#if the attr is all alphabetic /true of flase convert the string to boolean
-	if str.isalpha():
-		str=bool(str)
-		return str
-
+    #data type exists in the scene: float/int/bool
+    try:
+        attr=float (str)
+    except ValueError:
+        if(str=='True'):
+            attr=True
+        else:
+            attr=False
+        #print attr
+    return attr
 
 
 def keyframe_pose(*arg):
@@ -367,10 +387,6 @@ def export_pose(*arg):
     posedic = temp_data.pose_dict[posename[0]]
     scenename = maya.file(sn=True, q=True)
     doc = Document()
-    #print scenename
-   # print posedic
-    #print posename[0]
-    #root_node=doc.createElement('Posename: '+Pose_name+ '(filename: {0})'.format(scenename))
     root_node = doc.createElement('PoseData')
     doc.appendChild(root_node)
     file_node = doc.createElement('Filename')
@@ -542,7 +558,6 @@ def posesaver_pannel():
     #maya.showWindow(windowID)
     allowedAreas=['right','left']
     maya.dockControl('PoseSaver',a='right',con=windowID,aa=allowedAreas)
-
 
 
 def rigginggui():
